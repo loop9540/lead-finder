@@ -11,16 +11,27 @@ let leadFilters = { platform: "", admin: "", source: "", q: "" };
 let contactSearch = "";
 
 // --- Data Loading ---
+let contactsLoaded = false;
+
 async function loadData() {
-    const [l, c, s] = await Promise.all([
-        fetch("data/leads.json").then(r => r.json()),
-        fetch("data/contacts.json").then(r => r.json()),
-        fetch("data/stats.json").then(r => r.json()),
-    ]);
-    leads = l;
-    contacts = c;
-    stats = s;
-    render();
+    try {
+        // Load leads and stats first (small files)
+        const [l, s] = await Promise.all([
+            fetch("data/leads.json").then(r => r.json()),
+            fetch("data/stats.json").then(r => r.json()),
+        ]);
+        leads = l;
+        stats = s;
+        render();
+
+        // Load contacts in background (large file)
+        fetch("data/contacts.json")
+            .then(r => r.json())
+            .then(c => { contacts = c; contactsLoaded = true; if (currentPage === "contacts" || currentPage.startsWith("lead:")) render(); })
+            .catch(e => console.warn("Contacts load failed:", e));
+    } catch (e) {
+        document.getElementById("app").innerHTML = `<div class="loading">Error loading data: ${e.message}</div>`;
+    }
 }
 
 // --- Helpers ---
