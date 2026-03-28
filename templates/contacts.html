@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Contacts ({{ total }}) — Lead Finder{% endblock %}
+{% block content %}
+<h1>Contacts <span class="count">({{ total }})</span></h1>
+
+<form class="filters" method="get">
+    <input type="text" name="q" value="{{ search }}" placeholder="Search name, email, or company...">
+    <button type="submit">Search</button>
+    {% if search %}
+    <a href="{{ url_for('contacts') }}" class="btn-link">Clear</a>
+    {% endif %}
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Title</th>
+            <th>Company (9at)</th>
+            <th>Platform</th>
+            <th>Email</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in contacts %}
+        <tr>
+            <td>{{ c.first_name }} {{ c.last_name }}</td>
+            <td>{{ c.title }}</td>
+            <td>{{ c.company_name_9at or c.lead_company }}</td>
+            <td>{{ c.platform }}</td>
+            <td>{% if c.email %}<a href="mailto:{{ c.email }}">{{ c.email }}</a>{% endif %}</td>
+            <td>{{ c.email_status }}</td>
+        </tr>
+        {% endfor %}
+        {% if not contacts %}
+        <tr><td colspan="6" class="empty">No contacts found.</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="?q={{ search }}&page={{ page - 1 }}">Previous</a>
+    {% endif %}
+    <span>Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="?q={{ search }}&page={{ page + 1 }}">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

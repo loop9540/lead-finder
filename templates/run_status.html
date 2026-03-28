@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Run #{{ run.id }} — Lead Finder{% endblock %}
+{% block content %}
+<h1>Run #{{ run.id }}</h1>
+
+<div class="run-info">
+    <p><strong>Status:</strong> <span id="status" class="badge badge-{{ run.status }}">{{ run.status }}</span></p>
+    <p><strong>Sources:</strong> {{ run.sources }}</p>
+    <p><strong>Started:</strong> {{ run.started_at }}</p>
+    <p id="finished" {% if not run.finished_at %}style="display:none"{% endif %}>
+        <strong>Finished:</strong> <span id="finished-at">{{ run.finished_at or '' }}</span>
+    </p>
+    <p id="counts" {% if run.status != 'completed' %}style="display:none"{% endif %}>
+        <strong>Raw leads:</strong> <span id="raw">{{ run.total_raw }}</span> |
+        <strong>After dedup:</strong> <span id="deduped">{{ run.total_deduped }}</span>
+    </p>
+    <p id="error" {% if not run.error_message %}style="display:none"{% endif %}>
+        <strong>Error:</strong> <span id="error-msg">{{ run.error_message or '' }}</span>
+    </p>
+</div>
+
+<div id="download" {% if run.status != 'completed' %}style="display:none"{% endif %}>
+    <a href="{{ url_for('download_run', run_id=run.id) }}" class="btn">Download Excel</a>
+    <a href="{{ url_for('leads') }}" class="btn">View Leads</a>
+</div>
+
+<h2>Progress</h2>
+<div id="progress" class="progress-log">
+    <p class="empty">Waiting for updates...</p>
+</div>
+
+{% if run.status in ('pending', 'running') %}
+<script>
+const runId = {{ run.id }};
+const poll = setInterval(async () => {
+    try {
+        const res = await fetch(`/api/run/${runId}`);
+        const data = await res.json();
+
+        document.getElementById('status').textContent = data.status;
+        document.getElementById('status').className = `badge badge-${data.status}`;
+
+        if (data.progress && data.progress.length > 0) {
+            document.getElementById('progress').innerHTML =
+                data.progress.map(m => `<p>${m}</p>`).join('');
+            // Auto-scroll
+            const el = document.getElementById('progress');
+            el.scrollTop = el.scrollHeight;
+        }
+
+        if (data.status === 'completed') {
+            clearInterval(poll);
+            document.getElementById('finished').style.display = '';
+            document.getElementById('finished-at').textContent = data.finished_at;
+            document.getElementById('counts').style.display = '';
+            document.getElementById('raw').textContent = data.total_raw;
+            document.getElementById('deduped').textContent = data.total_deduped;
+            document.getElementById('download').style.display = '';
+        } else if (data.status === 'failed') {
+            clearInterval(poll);
+            document.getElementById('finished').style.display = '';
+            document.getElementById('finished-at').textContent = data.finished_at;
+            document.getElementById('error').style.display = '';
+            document.getElementById('error-msg').textContent = data.error_message;
+        }
+    } catch (e) {
+        console.error('Poll error:', e);
+    }
+}, 3000);
+</script>
+{% endif %}
+{% endblock %}

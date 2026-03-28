@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lead Finder{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav>
+        <div class="nav-brand">Lead Finder</div>
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>Dashboard</a>
+            <a href="{{ url_for('leads') }}" {% if request.endpoint in ('leads', 'lead_detail') %}class="active"{% endif %}>Leads</a>
+            <a href="{{ url_for('contacts') }}" {% if request.endpoint == 'contacts' %}class="active"{% endif %}>Contacts</a>
+            <a href="{{ url_for('run') }}" {% if request.endpoint in ('run', 'run_status') %}class="active"{% endif %}>New Run</a>
+            <a href="{{ url_for('history') }}" {% if request.endpoint == 'history' %}class="active"{% endif %}>History</a>
+        </div>
+    </nav>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

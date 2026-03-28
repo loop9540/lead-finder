@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ lead.company_name }} — Lead Finder{% endblock %}
+{% block content %}
+<h1>{{ lead.company_name }}</h1>
+
+<div class="run-info">
+    {% if lead.aum %}<p><strong>AUM:</strong> ${{ "{:,.0f}".format(lead.aum / 1000000) }}M</p>{% endif %}
+    {% if lead.total_gav %}<p><strong>Total Fund GAV:</strong> ${{ "{:,.0f}".format(lead.total_gav / 1000000) }}M</p>{% endif %}
+    {% if lead.fund_count %}<p><strong>Funds:</strong> {{ lead.fund_count }}</p>{% endif %}
+    {% if lead.fund_types %}<p><strong>Fund Types:</strong> {{ lead.fund_types }}</p>{% endif %}
+    {% if lead.platform %}<p><strong>Tech Platform:</strong> {{ lead.platform }}</p>{% endif %}
+    {% if lead.admin %}<p><strong>Fund Admin:</strong> {{ lead.admin }}</p>{% endif %}
+    <p><strong>Source:</strong> {{ lead.source }}</p>
+    {% if lead.domain %}<p><strong>Domain:</strong> <a href="{{ lead.domain if lead.domain.startswith('http') else 'https://' + lead.domain }}" target="_blank">{{ lead.domain }}</a></p>{% endif %}
+</div>
+
+<h2>Contacts <span class="count">({{ contacts | length }})</span></h2>
+
+{% if contacts %}
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Title</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Phone</th>
+            <th>LinkedIn</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in contacts %}
+        <tr>
+            <td>{{ c.first_name }} {{ c.last_name }}</td>
+            <td>{{ c.title }}</td>
+            <td>{% if c.email %}<a href="mailto:{{ c.email }}">{{ c.email }}</a>{% endif %}</td>
+            <td>{{ c.email_status }}</td>
+            <td>{{ c.phone }}</td>
+            <td>{% if c.linkedin %}<a href="{{ c.linkedin }}" target="_blank">Profile</a>{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="empty">No contacts found for this lead.</p>
+{% endif %}
+
+<p><a href="{{ url_for('leads') }}">&larr; Back to leads</a></p>
+{% endblock %}

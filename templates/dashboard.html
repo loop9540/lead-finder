@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Lead Finder{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="stats-cards">
+    <div class="card big">
+        <div class="card-number">{{ "{:,}".format(stats.total) }}</div>
+        <div class="card-label">Total Leads</div>
+    </div>
+    <div class="card">
+        <div class="card-number">{{ "{:,}".format(contact_stats.total | default(0)) }}</div>
+        <div class="card-label">Contacts</div>
+    </div>
+    <div class="card">
+        <div class="card-number">{{ "{:,}".format(contact_stats.with_email | default(0)) }}</div>
+        <div class="card-label">With Email</div>
+    </div>
+    <div class="card">
+        <div class="card-number">{{ "{:,}".format(contact_stats.leads_matched | default(0)) }}</div>
+        <div class="card-label">Leads Matched</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div>
+        <h2>By Tech Platform</h2>
+        <table>
+            <thead><tr><th>Tech Platform</th><th>Leads</th></tr></thead>
+            <tbody>
+                {% for p in stats.platforms %}
+                <tr>
+                    <td><a href="{{ url_for('leads', platform=p.platform) }}">{{ p.platform }}</a></td>
+                    <td>{{ p.cnt }}</td>
+                </tr>
+                {% endfor %}
+                {% if not stats.platforms %}
+                <tr><td colspan="2" class="empty">No tech platforms detected yet</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <h2>By Fund Administrator</h2>
+        <table>
+            <thead><tr><th>Fund Admin</th><th>Leads</th></tr></thead>
+            <tbody>
+                {% for a in stats.admins %}
+                <tr>
+                    <td><a href="{{ url_for('leads', admin=a.admin) }}">{{ a.admin }}</a></td>
+                    <td>{{ a.cnt }}</td>
+                </tr>
+                {% endfor %}
+                {% if not stats.admins %}
+                <tr><td colspan="2" class="empty">No admin data yet</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div>
+        <h2>By Source</h2>
+        <table>
+            <thead><tr><th>Source</th><th>Leads</th></tr></thead>
+            <tbody>
+                {% for s in stats.sources %}
+                <tr>
+                    <td><a href="{{ url_for('leads', source=s.source) }}">{{ s.source }}</a></td>
+                    <td>{{ s.cnt }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div>
+        {% if runs %}
+        <h2>Recent Runs</h2>
+        <table>
+            <thead><tr><th>ID</th><th>Date</th><th>Status</th><th>Leads</th></tr></thead>
+            <tbody>
+                {% for r in runs %}
+                <tr>
+                    <td><a href="{{ url_for('run_status', run_id=r.id) }}">#{{ r.id }}</a></td>
+                    <td>{{ r.started_at }}</td>
+                    <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+                    <td>{{ r.total_deduped }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

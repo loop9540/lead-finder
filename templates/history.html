@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Run History — Lead Finder{% endblock %}
+{% block content %}
+<h1>Run History</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Sources</th>
+            <th>Status</th>
+            <th>Raw</th>
+            <th>Deduped</th>
+            <th>Download</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in runs %}
+        <tr>
+            <td><a href="{{ url_for('run_status', run_id=r.id) }}">#{{ r.id }}</a></td>
+            <td>{{ r.started_at }}</td>
+            <td>{{ r.sources }}</td>
+            <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+            <td>{{ r.total_raw }}</td>
+            <td>{{ r.total_deduped }}</td>
+            <td>
+                {% if r.output_file %}
+                <a href="{{ url_for('download_run', run_id=r.id) }}">Excel</a>
+                {% else %}—{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not runs %}
+        <tr><td colspan="7" class="empty">No runs yet. <a href="{{ url_for('run') }}">Start one</a></td></tr>
+        {% endif %}
+    </tbody>
+</table>
+{% endblock %}

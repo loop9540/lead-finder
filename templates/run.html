@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}New Run — Lead Finder{% endblock %}
+{% block content %}
+<h1>Start Discovery Run</h1>
+
+{% if active_run_id %}
+<div class="alert">
+    A run is already in progress.
+    <a href="{{ url_for('run_status', run_id=active_run_id) }}">View status</a>
+</div>
+{% else %}
+<form method="post" enctype="multipart/form-data" class="run-form">
+    <fieldset>
+        <legend>Sources</legend>
+        {% for s in sources %}
+        <label class="checkbox">
+            <input type="checkbox" name="sources" value="{{ s }}"
+                   {% if s in ('crt', 'website', 'edgar') %}checked{% endif %}>
+            {{ s }}
+        </label>
+        {% endfor %}
+    </fieldset>
+
+    <fieldset>
+        <legend>Deduplication (optional)</legend>
+        <label>Upload existing leads file (Excel):
+            <input type="file" name="existing" accept=".xlsx,.xls,.csv">
+        </label>
+    </fieldset>
+
+    <button type="submit" class="btn btn-primary">Start Run</button>
+</form>
+{% endif %}
+{% endblock %}

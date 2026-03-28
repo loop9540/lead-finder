@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Leads ({{ total }}) — Lead Finder{% endblock %}
+{% block content %}
+<h1>Leads <span class="count">({{ total }})</span></h1>
+
+<form class="filters" method="get">
+    <select name="platform">
+        <option value="">All Tech Platforms</option>
+        {% for p in platforms %}
+        <option value="{{ p }}" {% if p == platform %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+    </select>
+    <select name="admin">
+        <option value="">All Fund Admins</option>
+        {% for a in admins %}
+        <option value="{{ a }}" {% if a == admin %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+    </select>
+    <select name="source">
+        <option value="">All Sources</option>
+        {% for s in sources %}
+        <option value="{{ s }}" {% if s == source %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" name="q" value="{{ search }}" placeholder="Search company name...">
+    <button type="submit">Filter</button>
+    {% if platform or admin or source or search %}
+    <a href="{{ url_for('leads') }}" class="btn-link">Clear</a>
+    {% endif %}
+</form>
+
+<div class="table-actions">
+    <a href="{{ url_for('download_all') }}" class="btn">Download All as Excel</a>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Company Name</th>
+            <th>AUM</th>
+            <th>Funds</th>
+            <th>Tech Platform</th>
+            <th>Fund Admin</th>
+            <th>Source</th>
+            <th>Contacts</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lead in leads %}
+        <tr>
+            <td><a href="{{ url_for('lead_detail', lead_id=lead.id) }}">{{ lead.company_name }}</a></td>
+            <td>{% if lead.aum %}${{ "{:,.0f}".format(lead.aum / 1000000) }}M{% else %}—{% endif %}</td>
+            <td>{% if lead.fund_count %}{{ lead.fund_count }}{% else %}—{% endif %}</td>
+            <td>{{ lead.platform if lead.platform else '—' }}</td>
+            <td>{{ lead.admin or '—' }}</td>
+            <td>{{ lead.source }}</td>
+            <td>
+                {% if lead.contact_count %}
+                <a href="{{ url_for('lead_detail', lead_id=lead.id) }}">{{ lead.contact_count }}</a>
+                {% else %}
+                —
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not leads %}
+        <tr><td colspan="8" class="empty">No leads found.</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="?platform={{ platform }}&admin={{ admin }}&source={{ source }}&q={{ search }}&page={{ page - 1 }}">Previous</a>
+    {% endif %}
+    <span>Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="?platform={{ platform }}&admin={{ admin }}&source={{ source }}&q={{ search }}&page={{ page + 1 }}">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
