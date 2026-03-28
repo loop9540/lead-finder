@@ -166,7 +166,7 @@ function renderLeads() {
             <input type="text" placeholder="Search company..." value="${esc(leadFilters.q)}"
                    oninput="leadFilters.q=this.value;leadsPage=1;render()">
             ${(leadFilters.platform || leadFilters.admin || leadFilters.source || leadFilters.q) ?
-                '<a class="btn btn-secondary" onclick="leadFilters={platform:\\'\\',admin:\\'\\',source:\\'\\',q:\\'\\'};leadsPage=1;render()">Clear</a>' : ""}
+                '<a class="btn btn-secondary" onclick="clearLeadFilters()">Clear</a>' : ""}
         </div>
         <div class="table-actions">
             <button onclick="exportCSV()">Export CSV</button>
@@ -214,7 +214,7 @@ function renderContacts() {
         <div class="filters">
             <input type="text" placeholder="Search name, email, or company..." value="${esc(contactSearch)}"
                    oninput="contactSearch=this.value;contactsPage=1;render()">
-            ${contactSearch ? '<a class="btn btn-secondary" onclick="contactSearch=\\'\\';contactsPage=1;render()">Clear</a>' : ""}
+            ${contactSearch ? '<a class="btn btn-secondary" onclick="clearContactSearch()">Clear</a>' : ""}
         </div>
         <table>
             <thead><tr>
@@ -287,6 +287,18 @@ function showLead(id) { currentPage = "lead:" + id; render(); window.scrollTo(0,
 function sortLeads(col) {
     if (leadSort.col === col) leadSort.dir = leadSort.dir === "asc" ? "desc" : "asc";
     else { leadSort.col = col; leadSort.dir = col === "aum" || col === "fund_count" || col === "contact_count" ? "desc" : "asc"; }
+    render();
+}
+
+function clearLeadFilters() {
+    leadFilters = { platform: "", admin: "", source: "", q: "" };
+    leadsPage = 1;
+    render();
+}
+
+function clearContactSearch() {
+    contactSearch = "";
+    contactsPage = 1;
     render();
 }
 
