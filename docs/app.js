@@ -119,12 +119,14 @@ function renderDashboard() {
                 <h2>By Tech Platform</h2>
                 <table><thead><tr><th>Tech Platform</th><th>Leads</th></tr></thead><tbody>
                 ${sortedP.map(([p, c]) => `<tr><td><a onclick="filterLeads('platform','${esc(p)}')">${esc(p)}</a></td><td>${fmt(c)}</td></tr>`).join("")}
+                <tr style="font-weight:700;border-top:2px solid #e2e8f0"><td>Total</td><td>${fmt(sortedP.reduce((s, r) => s + r[1], 0))}</td></tr>
                 </tbody></table>
             </div>
             <div>
                 <h2>By Fund Administrator</h2>
                 <table><thead><tr><th>Fund Admin</th><th>Leads</th></tr></thead><tbody>
                 ${sortedA.map(([a, c]) => `<tr><td><a onclick="filterLeads('admin','${esc(a)}')">${esc(a)}</a></td><td>${fmt(c)}</td></tr>`).join("")}
+                <tr style="font-weight:700;border-top:2px solid #e2e8f0"><td>Total</td><td>${fmt(sortedA.reduce((s, r) => s + r[1], 0))}</td></tr>
                 </tbody></table>
             </div>
         </div>
