@@ -1,4 +1,19 @@
 // Lead Finder — Static Site
+
+// --- Auth ---
+const PASS_HASH = "a3f1c2d9e8"; // simple obfuscation, not real security
+function checkAuth() {
+    const stored = sessionStorage.getItem("lf_auth");
+    if (stored === "granted") return true;
+    const pw = prompt("Enter password:");
+    if (pw === "OhvBzxSv") {
+        sessionStorage.setItem("lf_auth", "granted");
+        return true;
+    }
+    document.getElementById("app").innerHTML = '<div class="loading">Access denied.</div>';
+    return false;
+}
+
 let leads = [];
 let contacts = {};
 let stats = {};
@@ -476,4 +491,4 @@ document.querySelectorAll(".nav-links a").forEach(a => {
 });
 
 // --- Init ---
-loadData();
+if (checkAuth()) loadData();
