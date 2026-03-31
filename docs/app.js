@@ -171,7 +171,8 @@ function renderLeads() {
                 '<a class="btn btn-secondary" onclick="clearLeadFilters()">Clear</a>' : ""}
         </div>
         <div class="table-actions">
-            <button onclick="exportCSV()">Export CSV</button>
+            <button onclick="exportOutreach()">Export for Outreach.io</button>
+            <button class="btn-secondary" onclick="exportCSV()">Export CSV</button>
         </div>
         <table>
             <thead><tr>
@@ -325,6 +326,87 @@ function exportCSV() {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "leads_export.csv";
+    a.click();
+}
+
+// Title priority for contact ranking
+const TITLE_PRIORITY = [
+    /\b(ceo|chief executive)\b/i,
+    /\b(cfo|chief financial)\b/i,
+    /\b(coo|chief operating)\b/i,
+    /\b(cio|chief investment)\b/i,
+    /\b(president)\b/i,
+    /\b(managing partner|managing director|managing member)\b/i,
+    /\b(partner)\b/i,
+    /\b(founder|co-founder)\b/i,
+    /\b(evp|svp|executive vice president|senior vice president)\b/i,
+    /\b(vp|vice president)\b/i,
+    /\b(director)\b/i,
+    /\b(controller|treasurer)\b/i,
+];
+
+function rankContact(c) {
+    const title = (c.title || "").toLowerCase();
+    for (let i = 0; i < TITLE_PRIORITY.length; i++) {
+        if (TITLE_PRIORITY[i].test(title)) return i;
+    }
+    return TITLE_PRIORITY.length;
+}
+
+function exportOutreach() {
+    if (!contactsLoaded) {
+        alert("Contacts are still loading. Please wait a moment and try again.");
+        return;
+    }
+
+    const f = filteredLeads().filter(l => l.contact_count > 0);
+    const MAX_CONTACTS = 3;
+
+    const headers = [
+        "Sponsor", "Domain", "Fund Admin", "Tech Platform",
+        "Funds", "Total AUM $",
+        "First Name 1", "Last Name 1", "Title 1", "Email 1", "Phone 1",
+        "First Name 2", "Last Name 2", "Title 2", "Email 2", "Phone 2",
+        "First Name 3", "Last Name 3", "Title 3", "Email 3", "Phone 3",
+    ];
+
+    const rows = [];
+    for (const l of f) {
+        const cs = (contacts[String(l.id)] || [])
+            .filter(c => c.email)
+            .sort((a, b) => rankContact(a) - rankContact(b))
+            .slice(0, MAX_CONTACTS);
+
+        if (cs.length === 0) continue;
+
+        const row = [
+            l.company_name,
+            l.domain || "",
+            l.admin || "",
+            l.platform || "",
+            l.fund_count || "",
+            l.aum ? Math.round(l.aum) : "",
+        ];
+
+        for (let i = 0; i < MAX_CONTACTS; i++) {
+            const c = cs[i];
+            if (c) {
+                row.push(c.first_name || "", c.last_name || "", c.title || "", c.email || "", c.phone || "");
+            } else {
+                row.push("", "", "", "", "");
+            }
+        }
+        rows.push(row);
+    }
+
+    let csv = headers.join(",") + "\n";
+    for (const row of rows) {
+        csv += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",") + "\n";
+    }
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "outreach_export.csv";
     a.click();
 }
 
