@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ lead.company_name }} — Lead Finder{% endblock %}
+{% block title %}{{ lead.company_name }} <span class="count">(Sponsor)</span> — Lead Finder{% endblock %}
 {% block content %}
-<h1>{{ lead.company_name }}</h1>
+<h1>{{ lead.company_name }} <span class="count">(Sponsor)</span></h1>
 
 <div class="run-info">
     {% if lead.aum %}<p><strong>AUM:</strong> ${{ "{:,.0f}".format(lead.aum / 1000000) }}M</p>{% endif %}

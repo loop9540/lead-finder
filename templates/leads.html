@@ -22,7 +22,7 @@
         <option value="{{ s }}" {% if s == source %}selected{% endif %}>{{ s }}</option>
         {% endfor %}
     </select>
-    <input type="text" name="q" value="{{ search }}" placeholder="Search company name...">
+    <input type="text" name="q" value="{{ search }}" placeholder="Search sponsor...">
     <button type="submit">Filter</button>
     {% if platform or admin or source or search %}
     <a href="{{ url_for('leads') }}" class="btn-link">Clear</a>
@@ -36,7 +36,7 @@
 <table>
     <thead>
         <tr>
-            <th>Company Name</th>
+            <th>Sponsor</th>
             <th>AUM</th>
             <th>Funds</th>
             <th>Tech Platform</th>

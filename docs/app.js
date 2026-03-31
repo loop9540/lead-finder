@@ -165,7 +165,7 @@ function renderLeads() {
                 <option value="">All Sources</option>
                 ${sources.map(s => `<option value="${esc(s)}" ${s === leadFilters.source ? "selected" : ""}>${esc(s)}</option>`).join("")}
             </select>
-            <input type="text" placeholder="Search company..." value="${esc(leadFilters.q)}"
+            <input type="text" placeholder="Search sponsor..." value="${esc(leadFilters.q)}"
                    oninput="leadFilters.q=this.value;leadsPage=1;render()">
             ${(leadFilters.platform || leadFilters.admin || leadFilters.source || leadFilters.q) ?
                 '<a class="btn btn-secondary" onclick="clearLeadFilters()">Clear</a>' : ""}
@@ -175,7 +175,7 @@ function renderLeads() {
         </div>
         <table>
             <thead><tr>
-                <th ${thClass("company_name")} onclick="sortLeads('company_name')">Company Name</th>
+                <th ${thClass("company_name")} onclick="sortLeads('company_name')">Sponsor</th>
                 <th ${thClass("aum")} onclick="sortLeads('aum')">AUM</th>
                 <th ${thClass("fund_count")} onclick="sortLeads('fund_count')">Funds</th>
                 <th ${thClass("platform")} onclick="sortLeads('platform')">Tech Platform</th>
@@ -214,7 +214,7 @@ function renderContacts() {
     document.getElementById("app").innerHTML = `
         <h1>Contacts <span class="count">(${fmt(total)})</span></h1>
         <div class="filters">
-            <input type="text" placeholder="Search name, email, or company..." value="${esc(contactSearch)}"
+            <input type="text" placeholder="Search name, email, or sponsor..." value="${esc(contactSearch)}"
                    oninput="contactSearch=this.value;contactsPage=1;render()">
             ${contactSearch ? '<a class="btn btn-secondary" onclick="clearContactSearch()">Clear</a>' : ""}
         </div>
@@ -312,7 +312,7 @@ function filterLeads(key, val) {
 
 function exportCSV() {
     const f = filteredLeads();
-    const headers = ["Company Name", "AUM", "Funds", "Fund Types", "Tech Platform", "Fund Admin", "Source", "Domain", "Contacts"];
+    const headers = ["Sponsor", "AUM", "Funds", "Fund Types", "Tech Platform", "Fund Admin", "Source", "Domain", "Contacts"];
     const rows = f.map(l => [
         l.company_name, l.aum || "", l.fund_count || "", l.fund_types || "",
         l.platform || "", l.admin || "", l.source, l.domain || "", l.contact_count || ""

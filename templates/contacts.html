@@ -4,7 +4,7 @@
 <h1>Contacts <span class="count">({{ total }})</span></h1>
 
 <form class="filters" method="get">
-    <input type="text" name="q" value="{{ search }}" placeholder="Search name, email, or company...">
+    <input type="text" name="q" value="{{ search }}" placeholder="Search name, email, or sponsor...">
     <button type="submit">Search</button>
     {% if search %}
     <a href="{{ url_for('contacts') }}" class="btn-link">Clear</a>
@@ -16,7 +16,7 @@
         <tr>
             <th>Name</th>
             <th>Title</th>
-            <th>Company (9at)</th>
+            <th>Sponsor (9at)</th>
             <th>Platform</th>
             <th>Email</th>
             <th>Status</th>
