@@ -329,6 +329,61 @@ function exportCSV() {
     a.click();
 }
 
+// --- Clean Sponsor Name ---
+const LEGAL_SUFFIXES = /[,.]?\s*\b(LLC|L\.?L\.?C\.?|LP|L\.?P\.?|LLP|L\.?L\.?P\.?|Inc\.?|Corp\.?|Ltd\.?|LTD|PLC|S\.?A\.?|N\.?V\.?|PTE|PTY|CO\.?|COMPANY|CORPORATION|LIMITED|INCORPORATED)\b\.?\s*/gi;
+const DESCRIPTORS = /\b(MANAGEMENT|PARTNERS|CAPITAL|ADVISORS|ADVISORY|ADVISER|ADVISERS|GROUP|HOLDINGS|HOLDING|FUND|FUNDS|INVESTMENT|INVESTMENTS|SERVICES|ASSOCIATES|VENTURES|EQUITY|ASSET|GLOBAL|INTERNATIONAL|FINANCIAL|PRIVATE|SOLUTIONS|STRATEGIES|CONSULTING|RESOURCES|SECURITIES|TRUST|REALTY|REAL ESTATE)\b/gi;
+
+function cleanSponsorName(raw) {
+    if (!raw) return "";
+    let name = raw.trim();
+
+    // Remove legal suffixes
+    name = name.replace(LEGAL_SUFFIXES, " ").trim();
+
+    // Remove "The " prefix
+    name = name.replace(/^THE\s+/i, "");
+
+    // Remove trailing commas, periods, dashes
+    name = name.replace(/[,.\-\s]+$/, "").trim();
+
+    // Try removing descriptors
+    let cleaned = name.replace(DESCRIPTORS, " ").replace(/\s+/g, " ").trim();
+    cleaned = cleaned.replace(/[,.\-\s]+$/, "").trim();
+
+    // If removing descriptors leaves nothing or just 1-2 chars, keep the best word
+    if (cleaned.length < 2) {
+        cleaned = name;
+    }
+
+    // Fix capitalization
+    // If all uppercase and more than 3 chars, title-case it
+    // Fix capitalization: title-case all-uppercase names, keep acronyms
+    if (cleaned === cleaned.toUpperCase()) {
+        if (cleaned.length > 3) {
+            const words = cleaned.split(/\s+/);
+            const isMultiWord = words.length > 1;
+            cleaned = words.map(word => {
+                // In multi-word names, only keep 1-2 letter words uppercase (L, II)
+                // In single-word names, keep 1-3 letter acronyms (IVP, NEA, DLD)
+                const acronymMax = isMultiWord ? 2 : 3;
+                if (word.length <= acronymMax && /^[A-Z]+$/.test(word)) return word;
+                // Words starting with digit: capitalize letter after digits
+                if (/^\d/.test(word)) {
+                    return word.replace(/^(\d+)([a-zA-Z])/i, (m, d, c) => d + c.toUpperCase())
+                               .replace(/([a-zA-Z])([a-zA-Z]+)/g, (m, f, r) => f.toUpperCase() + r.toLowerCase());
+                }
+                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+            }).join(" ");
+        }
+        // else: short all-caps (IVP, NEA) — keep as-is
+    }
+
+    // Clean up any double spaces
+    cleaned = cleaned.replace(/\s+/g, " ").trim();
+
+    return cleaned;
+}
+
 // Title priority for contact ranking
 const TITLE_PRIORITY = [
     /\b(ceo|chief executive)\b/i,
@@ -375,13 +430,14 @@ function exportOutreach() {
 
         if (cs.length === 0) continue;
 
+        const clean = cleanSponsorName(l.company_name);
         const fundNames = l.fund_types || "";
         const aumFormatted = l.aum ? " $" + Math.round(l.aum).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " " : " $-   ";
 
         // One row per contact (matching Shai's format)
         for (const c of cs) {
             rows.push([
-                l.company_name,
+                clean,
                 fundNames,
                 aumFormatted,
                 c.first_name || "",
