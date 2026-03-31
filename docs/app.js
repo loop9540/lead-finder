@@ -371,22 +371,26 @@ function exportOutreach() {
     for (const l of f) {
         const cs = (contacts[String(l.id)] || [])
             .filter(c => c.email)
-            .sort((a, b) => rankContact(a) - rankContact(b))
-            .slice(0, 1);
+            .sort((a, b) => rankContact(a) - rankContact(b));
 
         if (cs.length === 0) continue;
 
-        const c = cs[0];
-        rows.push([
-            l.company_name,
-            l.fund_count || "",
-            l.aum ? Math.round(l.aum) : "",
-            c.first_name || "",
-            c.last_name || "",
-            c.title || "",
-            c.email || "",
-            c.phone || "",
-        ]);
+        const fundNames = l.fund_types || "";
+        const aumFormatted = l.aum ? " $" + Math.round(l.aum).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " " : " $-   ";
+
+        // One row per contact (matching Shai's format)
+        for (const c of cs) {
+            rows.push([
+                l.company_name,
+                fundNames,
+                aumFormatted,
+                c.first_name || "",
+                c.last_name || "",
+                c.title || "",
+                c.email || "",
+                c.phone || "",
+            ]);
+        }
     }
 
     let csv = headers.join(",") + "\n";
