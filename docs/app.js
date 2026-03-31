@@ -7,7 +7,7 @@ let leadsPage = 1;
 let contactsPage = 1;
 const PER_PAGE = 50;
 let leadSort = { col: "company_name", dir: "asc" };
-let leadFilters = { platform: "", admin: "", source: "", q: "" };
+let leadFilters = { platform: "", admin: "", source: "", asset_class: "", q: "" };
 let contactSearch = "";
 
 // --- Data Loading ---
@@ -48,6 +48,7 @@ function filteredLeads() {
     let f = leads;
     if (leadFilters.platform) f = f.filter(r => r.platform === leadFilters.platform);
     if (leadFilters.admin) f = f.filter(r => r.admin === leadFilters.admin);
+    if (leadFilters.asset_class) f = f.filter(r => r.asset_class === leadFilters.asset_class);
     if (leadFilters.source) f = f.filter(r => r.source === leadFilters.source);
     if (leadFilters.q) {
         const q = leadFilters.q.toLowerCase();
@@ -143,6 +144,7 @@ function renderLeads() {
 
     const platforms = getUnique(leads, "platform");
     const adminsList = getUnique(leads, "admin");
+    const assetClasses = getUnique(leads, "asset_class");
     const sources = getUnique(leads, "source");
 
     function thClass(col) {
@@ -161,13 +163,17 @@ function renderLeads() {
                 <option value="">All Fund Admins</option>
                 ${adminsList.map(a => `<option value="${esc(a)}" ${a === leadFilters.admin ? "selected" : ""}>${esc(a)}</option>`).join("")}
             </select>
+            <select onchange="leadFilters.asset_class=this.value;leadsPage=1;render()">
+                <option value="">All Asset Classes</option>
+                ${assetClasses.map(a => `<option value="${esc(a)}" ${a === leadFilters.asset_class ? "selected" : ""}>${esc(a)}</option>`).join("")}
+            </select>
             <select onchange="leadFilters.source=this.value;leadsPage=1;render()">
                 <option value="">All Sources</option>
                 ${sources.map(s => `<option value="${esc(s)}" ${s === leadFilters.source ? "selected" : ""}>${esc(s)}</option>`).join("")}
             </select>
             <input type="text" placeholder="Search sponsor..." value="${esc(leadFilters.q)}"
                    oninput="leadFilters.q=this.value;leadsPage=1;render()">
-            ${(leadFilters.platform || leadFilters.admin || leadFilters.source || leadFilters.q) ?
+            ${(leadFilters.platform || leadFilters.admin || leadFilters.asset_class || leadFilters.source || leadFilters.q) ?
                 '<a class="btn btn-secondary" onclick="clearLeadFilters()">Clear</a>' : ""}
         </div>
         <div class="table-actions">
@@ -181,7 +187,7 @@ function renderLeads() {
                 <th ${thClass("fund_count")} onclick="sortLeads('fund_count')">Funds</th>
                 <th ${thClass("platform")} onclick="sortLeads('platform')">Tech Platform</th>
                 <th ${thClass("admin")} onclick="sortLeads('admin')">Fund Admin</th>
-                <th>Source</th>
+                <th ${thClass("asset_class")} onclick="sortLeads('asset_class')">Asset Class</th>
                 <th ${thClass("contact_count")} onclick="sortLeads('contact_count')">Contacts</th>
             </tr></thead>
             <tbody>
@@ -191,7 +197,7 @@ function renderLeads() {
                 <td>${l.fund_count || '<span class="empty-cell">-</span>'}</td>
                 <td>${l.platform || '<span class="empty-cell">-</span>'}</td>
                 <td>${l.admin || '<span class="empty-cell">-</span>'}</td>
-                <td>${esc(l.source)}</td>
+                <td>${l.asset_class || '<span class="empty-cell">-</span>'}</td>
                 <td>${l.contact_count ? `<a onclick="showLead(${l.id})">${l.contact_count}</a>` : '<span class="empty-cell">-</span>'}</td>
             </tr>`).join("")}
             </tbody>
@@ -254,6 +260,7 @@ function renderLeadDetail(id) {
             ${lead.total_gav ? `<p><strong>Total Fund GAV:</strong> ${fmtM(lead.total_gav)}</p>` : ""}
             ${lead.fund_count ? `<p><strong>Funds:</strong> ${lead.fund_count}</p>` : ""}
             ${lead.fund_types ? `<p><strong>Fund Types:</strong> ${esc(lead.fund_types)}</p>` : ""}
+            ${lead.asset_class ? `<p><strong>Asset Class:</strong> ${esc(lead.asset_class)}</p>` : ""}
             ${lead.platform ? `<p><strong>Tech Platform:</strong> ${esc(lead.platform)}</p>` : ""}
             ${lead.admin ? `<p><strong>Fund Admin:</strong> ${esc(lead.admin)}</p>` : ""}
             ${lead.domain ? `<p><strong>Domain:</strong> <a href="${lead.domain.startsWith("http") ? lead.domain : "https://" + lead.domain}" target="_blank">${esc(lead.domain)}</a></p>` : ""}
@@ -294,7 +301,7 @@ function sortLeads(col) {
 }
 
 function clearLeadFilters() {
-    leadFilters = { platform: "", admin: "", source: "", q: "" };
+    leadFilters = { platform: "", admin: "", source: "", asset_class: "", q: "" };
     leadsPage = 1;
     render();
 }
