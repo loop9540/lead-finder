@@ -363,11 +363,8 @@ function exportOutreach() {
     const MAX_CONTACTS = 3;
 
     const headers = [
-        "Sponsor", "Domain", "Fund Admin", "Tech Platform",
-        "Funds", "Total AUM $",
+        "Sponsor", "New Funds", "Total AUM $",
         "First Name 1", "Last Name 1", "Title 1", "Email 1", "Phone 1",
-        "First Name 2", "Last Name 2", "Title 2", "Email 2", "Phone 2",
-        "First Name 3", "Last Name 3", "Title 3", "Email 3", "Phone 3",
     ];
 
     const rows = [];
@@ -375,28 +372,21 @@ function exportOutreach() {
         const cs = (contacts[String(l.id)] || [])
             .filter(c => c.email)
             .sort((a, b) => rankContact(a) - rankContact(b))
-            .slice(0, MAX_CONTACTS);
+            .slice(0, 1);
 
         if (cs.length === 0) continue;
 
-        const row = [
+        const c = cs[0];
+        rows.push([
             l.company_name,
-            l.domain || "",
-            l.admin || "",
-            l.platform || "",
             l.fund_count || "",
             l.aum ? Math.round(l.aum) : "",
-        ];
-
-        for (let i = 0; i < MAX_CONTACTS; i++) {
-            const c = cs[i];
-            if (c) {
-                row.push(c.first_name || "", c.last_name || "", c.title || "", c.email || "", c.phone || "");
-            } else {
-                row.push("", "", "", "", "");
-            }
-        }
-        rows.push(row);
+            c.first_name || "",
+            c.last_name || "",
+            c.title || "",
+            c.email || "",
+            c.phone || "",
+        ]);
     }
 
     let csv = headers.join(",") + "\n";
