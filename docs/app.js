@@ -240,6 +240,9 @@ function renderContacts() {
                    oninput="contactSearch=this.value;contactsPage=1;render()">
             ${contactSearch ? '<a class="btn btn-secondary" onclick="clearContactSearch()">Clear</a>' : ""}
         </div>
+        <div class="table-actions">
+            <button onclick="exportContactsCSV()">Download Contacts CSV</button>
+        </div>
         <table>
             <thead><tr>
                 <th>Name</th><th>Title</th><th>Company</th><th>Platform</th><th>Email</th>
@@ -319,6 +322,25 @@ function clearLeadFilters() {
     leadFilters = { platform: "", admin: "", source: "", asset_class: "", q: "" };
     leadsPage = 1;
     render();
+}
+
+function exportContactsCSV() {
+    const f = filteredContacts();
+    const headers = ["First Name", "Last Name", "Title", "Sponsor", "Platform", "Email", "Phone"];
+    const rows = f.map(c => [
+        c.first_name || "", c.last_name || "", c.title || "",
+        c.lead_company || "", c.platform || c.admin || "",
+        c.email || "", c.phone || ""
+    ]);
+    let csv = headers.join(",") + "\n";
+    for (const row of rows) {
+        csv += row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",") + "\n";
+    }
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "contacts_export.csv";
+    a.click();
 }
 
 function clearContactSearch() {
