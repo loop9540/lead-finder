@@ -24,6 +24,7 @@ const PER_PAGE = 50;
 let leadSort = { col: "company_name", dir: "asc" };
 let leadFilters = { platform: "", admin: "", source: "", asset_class: "", q: "" };
 let contactSearch = "";
+let contactFilters = { platform: "", admin: "", asset_class: "" };
 
 // --- Data Loading ---
 let contactsLoaded = false;
@@ -89,8 +90,11 @@ function filteredContacts() {
     for (const [lid, cs] of Object.entries(contacts)) {
         const lead = leads.find(l => l.id == lid);
         if (!lead) continue;
+        if (contactFilters.platform && lead.platform !== contactFilters.platform) continue;
+        if (contactFilters.admin && lead.admin !== contactFilters.admin) continue;
+        if (contactFilters.asset_class && lead.asset_class !== contactFilters.asset_class) continue;
         for (const c of cs) {
-            arr.push({ ...c, lead_id: lid, lead_company: lead.company_name, platform: lead.platform, admin: lead.admin });
+            arr.push({ ...c, lead_id: lid, lead_company: lead.company_name, platform: lead.platform, admin: lead.admin, asset_class: lead.asset_class });
         }
     }
     if (contactSearch) {
@@ -236,9 +240,21 @@ function renderContacts() {
     document.getElementById("app").innerHTML = `
         <h1>Contacts <span class="count">(${fmt(total)})</span></h1>
         <div class="filters">
+            <select onchange="contactFilters.platform=this.value;contactsPage=1;render()">
+                <option value="">All Tech Platforms</option>
+                ${getUnique(leads, "platform").map(p => `<option value="${esc(p)}" ${p === contactFilters.platform ? "selected" : ""}>${esc(p)}</option>`).join("")}
+            </select>
+            <select onchange="contactFilters.admin=this.value;contactsPage=1;render()">
+                <option value="">All Fund Admins</option>
+                ${getUnique(leads, "admin").map(a => `<option value="${esc(a)}" ${a === contactFilters.admin ? "selected" : ""}>${esc(a)}</option>`).join("")}
+            </select>
+            <select onchange="contactFilters.asset_class=this.value;contactsPage=1;render()">
+                <option value="">All Asset Classes</option>
+                ${getUnique(leads, "asset_class").map(a => `<option value="${esc(a)}" ${a === contactFilters.asset_class ? "selected" : ""}>${esc(a)}</option>`).join("")}
+            </select>
             <input type="text" placeholder="Search name, email, or sponsor..." value="${esc(contactSearch)}"
                    oninput="contactSearch=this.value;contactsPage=1;render()">
-            ${contactSearch ? '<a class="btn btn-secondary" onclick="clearContactSearch()">Clear</a>' : ""}
+            ${(contactSearch || contactFilters.platform || contactFilters.admin || contactFilters.asset_class) ? '<a class="btn btn-secondary" onclick="clearContactFilters()">Clear</a>' : ""}
         </div>
         <div class="table-actions">
             <button onclick="exportContactsCSV()">Download Contacts CSV</button>
@@ -345,6 +361,13 @@ function exportContactsCSV() {
 
 function clearContactSearch() {
     contactSearch = "";
+    contactsPage = 1;
+    render();
+}
+
+function clearContactFilters() {
+    contactSearch = "";
+    contactFilters = { platform: "", admin: "", asset_class: "" };
     contactsPage = 1;
     render();
 }
