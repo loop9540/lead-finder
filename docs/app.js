@@ -487,6 +487,7 @@ function exportOutreach() {
     const headers = [
         "Sponsor", "New Funds", "Total AUM $",
         "First Name 1", "Last Name 1", "Title 1", "Email 1", "Phone 1",
+        "Campaign",
     ];
 
     const rows = [];
@@ -500,6 +501,7 @@ function exportOutreach() {
         const clean = cleanSponsorName(l.company_name);
         const fundNames = l.fund_types || "";
         const aumFormatted = l.aum ? " $" + Math.round(l.aum).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " " : " $-   ";
+        const campaign = l.platform || "";
 
         // One row per contact (matching Shai's format)
         for (const c of cs) {
@@ -512,6 +514,7 @@ function exportOutreach() {
                 c.title || "",
                 c.email || "",
                 c.phone || "",
+                campaign,
             ]);
         }
     }
