@@ -17,14 +17,17 @@ function checkAuth() {
 let leads = [];
 let contacts = {};
 let stats = {};
+let lawyers = [];
 let currentPage = "dashboard";
 let leadsPage = 1;
 let contactsPage = 1;
+let lawyersPage = 1;
 const PER_PAGE = 50;
 let leadSort = { col: "company_name", dir: "asc" };
 let leadFilters = { platform: "", admin: "", source: "", asset_class: "", q: "" };
 let contactSearch = "";
 let contactFilters = { platform: "", admin: "", asset_class: "" };
+let lawyerFilters = { firm: "", country: "", practice: "", q: "" };
 
 // --- Data Loading ---
 let contactsLoaded = false;
@@ -45,6 +48,12 @@ async function loadData() {
             .then(r => r.json())
             .then(c => { contacts = c; contactsLoaded = true; if (currentPage === "contacts" || currentPage.startsWith("lead:")) render(); })
             .catch(e => console.warn("Contacts load failed:", e));
+
+        // Load lawyers
+        fetch("data/lawyers.json")
+            .then(r => r.json())
+            .then(data => { lawyers = data; if (currentPage === "lawyers") render(); })
+            .catch(e => console.warn("Lawyers load failed:", e));
     } catch (e) {
         document.getElementById("app").innerHTML = `<div class="loading">Error loading data: ${e.message}</div>`;
     }
@@ -113,7 +122,107 @@ function render() {
     if (currentPage === "dashboard") renderDashboard();
     else if (currentPage === "leads") renderLeads();
     else if (currentPage === "contacts") renderContacts();
+    else if (currentPage === "lawyers") renderLawyers();
     else if (currentPage.startsWith("lead:")) renderLeadDetail(currentPage.split(":")[1]);
+}
+
+function filteredLawyers() {
+    let f = lawyers;
+    if (lawyerFilters.firm) f = f.filter(r => r.firm === lawyerFilters.firm);
+    if (lawyerFilters.country) f = f.filter(r => r.country === lawyerFilters.country);
+    if (lawyerFilters.practice) f = f.filter(r => r.practice === lawyerFilters.practice);
+    if (lawyerFilters.q) {
+        const q = lawyerFilters.q.toLowerCase();
+        f = f.filter(r =>
+            (r.name || "").toLowerCase().includes(q) ||
+            (r.firm || "").toLowerCase().includes(q) ||
+            (r.bio || "").toLowerCase().includes(q) ||
+            (r.office || "").toLowerCase().includes(q)
+        );
+    }
+    return f;
+}
+
+function renderLawyers() {
+    const f = filteredLawyers();
+    const total = f.length;
+    const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+    lawyersPage = Math.min(lawyersPage, totalPages);
+    const start = (lawyersPage - 1) * PER_PAGE;
+    const page = f.slice(start, start + PER_PAGE);
+
+    const firms = getUnique(lawyers, "firm");
+    const countries = getUnique(lawyers, "country");
+    const practices = getUnique(lawyers, "practice");
+
+    document.getElementById("app").innerHTML = `
+        <h1>Fund Formation Lawyers <span class="count">(${fmt(total)})</span></h1>
+        <div class="filters">
+            <select onchange="lawyerFilters.firm=this.value;lawyersPage=1;render()">
+                <option value="">All Firms</option>
+                ${firms.map(x => `<option value="${esc(x)}" ${x === lawyerFilters.firm ? "selected" : ""}>${esc(x)}</option>`).join("")}
+            </select>
+            <select onchange="lawyerFilters.country=this.value;lawyersPage=1;render()">
+                <option value="">All Countries</option>
+                ${countries.map(x => `<option value="${esc(x)}" ${x === lawyerFilters.country ? "selected" : ""}>${esc(x)}</option>`).join("")}
+            </select>
+            <select onchange="lawyerFilters.practice=this.value;lawyersPage=1;render()">
+                <option value="">All Practices</option>
+                ${practices.map(x => `<option value="${esc(x)}" ${x === lawyerFilters.practice ? "selected" : ""}>${esc(x)}</option>`).join("")}
+            </select>
+            <input type="text" placeholder="Search name, firm, or bio..." value="${esc(lawyerFilters.q)}"
+                   oninput="lawyerFilters.q=this.value;lawyersPage=1;render()">
+            ${(lawyerFilters.firm || lawyerFilters.country || lawyerFilters.practice || lawyerFilters.q) ?
+                '<a class="btn btn-secondary" onclick="clearLawyerFilters()">Clear</a>' : ""}
+        </div>
+        <div class="table-actions">
+            <button onclick="exportLawyersCSV()">Download Lawyers CSV</button>
+        </div>
+        <table>
+            <thead><tr>
+                <th>Name</th><th>Firm</th><th>Title</th><th>Practice</th><th>Office</th><th>Country</th><th>Ranking</th><th>Bio</th>
+            </tr></thead>
+            <tbody>
+            ${page.map(l => `<tr>
+                <td>${esc(l.name)}</td>
+                <td>${l.source ? `<a href="${esc(l.source)}" target="_blank">${esc(l.firm)}</a>` : esc(l.firm)}</td>
+                <td>${esc(l.title)}</td>
+                <td>${esc(l.practice)}</td>
+                <td>${esc(l.office)}</td>
+                <td>${esc(l.country)}</td>
+                <td>${esc(l.ranking)}</td>
+                <td>${esc(l.bio)}</td>
+            </tr>`).join("")}
+            ${page.length === 0 ? '<tr><td colspan="8" class="empty-cell" style="text-align:center;padding:2rem">No lawyers found.</td></tr>' : ''}
+            </tbody>
+        </table>
+        ${totalPages > 1 ? `<div class="pagination">
+            ${lawyersPage > 1 ? `<a onclick="lawyersPage--;render()">Previous</a>` : ""}
+            <span>Page ${lawyersPage} of ${totalPages}</span>
+            ${lawyersPage < totalPages ? `<a onclick="lawyersPage++;render()">Next</a>` : ""}
+        </div>` : ""}
+    `;
+}
+
+function clearLawyerFilters() {
+    lawyerFilters = { firm: "", country: "", practice: "", q: "" };
+    lawyersPage = 1;
+    render();
+}
+
+function exportLawyersCSV() {
+    const f = filteredLawyers();
+    const headers = ["Name", "Firm", "Title", "Practice", "Office", "Country", "Ranking", "Bio", "Source"];
+    const rows = f.map(l => [l.name, l.firm, l.title, l.practice, l.office, l.country, l.ranking, l.bio, l.source]);
+    let csv = headers.join(",") + "\n";
+    for (const row of rows) {
+        csv += row.map(v => `"${String(v || "").replace(/"/g, '""')}"`).join(",") + "\n";
+    }
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "fund_formation_lawyers.csv";
+    a.click();
 }
 
 function renderDashboard() {
