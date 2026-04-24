@@ -24,7 +24,7 @@ let contactsPage = 1;
 let lawyersPage = 1;
 const PER_PAGE = 50;
 let leadSort = { col: "company_name", dir: "asc" };
-let leadFilters = { platform: "", admin: "", source: "", asset_class: "", q: "" };
+let leadFilters = { platform: "", admin: "", source: "", asset_class: "", country: "", fundraising_status: "", q: "" };
 let contactSearch = "";
 let contactFilters = { platform: "", admin: "", asset_class: "" };
 let lawyerFilters = { firm: "", country: "", practice: "", q: "" };
@@ -75,6 +75,8 @@ function filteredLeads() {
     if (leadFilters.admin) f = f.filter(r => r.admin === leadFilters.admin);
     if (leadFilters.asset_class) f = f.filter(r => r.asset_class === leadFilters.asset_class);
     if (leadFilters.source) f = f.filter(r => r.source === leadFilters.source);
+    if (leadFilters.country) f = f.filter(r => r.country === leadFilters.country);
+    if (leadFilters.fundraising_status) f = f.filter(r => r.fundraising_status === leadFilters.fundraising_status);
     if (leadFilters.q) {
         const q = leadFilters.q.toLowerCase();
         f = f.filter(r => r.company_name.toLowerCase().includes(q));
@@ -274,6 +276,8 @@ function renderLeads() {
     const adminsList = getUnique(leads, "admin");
     const assetClasses = getUnique(leads, "asset_class");
     const sources = getUnique(leads, "source");
+    const countries = getUnique(leads, "country");
+    const fundraisingStatuses = getUnique(leads, "fundraising_status");
 
     function thClass(col) {
         if (leadSort.col === col) return `class="sorted-${leadSort.dir}"`;
@@ -299,9 +303,17 @@ function renderLeads() {
                 <option value="">All Sources</option>
                 ${sources.map(s => `<option value="${esc(s)}" ${s === leadFilters.source ? "selected" : ""}>${esc(s)}</option>`).join("")}
             </select>
+            <select onchange="leadFilters.country=this.value;leadsPage=1;render()">
+                <option value="">All Countries</option>
+                ${countries.map(c => `<option value="${esc(c)}" ${c === leadFilters.country ? "selected" : ""}>${esc(c)}</option>`).join("")}
+            </select>
+            <select onchange="leadFilters.fundraising_status=this.value;leadsPage=1;render()">
+                <option value="">All Fundraising Statuses</option>
+                ${fundraisingStatuses.map(s => `<option value="${esc(s)}" ${s === leadFilters.fundraising_status ? "selected" : ""}>${esc(s)}</option>`).join("")}
+            </select>
             <input type="text" placeholder="Search sponsor..." value="${esc(leadFilters.q)}"
                    oninput="leadFilters.q=this.value;leadsPage=1;render()">
-            ${(leadFilters.platform || leadFilters.admin || leadFilters.asset_class || leadFilters.source || leadFilters.q) ?
+            ${(leadFilters.platform || leadFilters.admin || leadFilters.asset_class || leadFilters.source || leadFilters.country || leadFilters.fundraising_status || leadFilters.q) ?
                 '<a class="btn btn-secondary" onclick="clearLeadFilters()">Clear</a>' : ""}
         </div>
         <div class="table-actions">
@@ -316,6 +328,8 @@ function renderLeads() {
                 <th ${thClass("platform")} onclick="sortLeads('platform')">Tech Platform</th>
                 <th ${thClass("admin")} onclick="sortLeads('admin')">Fund Admin</th>
                 <th ${thClass("asset_class")} onclick="sortLeads('asset_class')">Asset Class</th>
+                <th ${thClass("country")} onclick="sortLeads('country')">Country</th>
+                <th ${thClass("fundraising_status")} onclick="sortLeads('fundraising_status')">Fundraising</th>
                 <th ${thClass("contact_count")} onclick="sortLeads('contact_count')">Contacts</th>
             </tr></thead>
             <tbody>
@@ -326,6 +340,8 @@ function renderLeads() {
                 <td>${l.platform || '<span class="empty-cell">-</span>'}</td>
                 <td>${l.admin || '<span class="empty-cell">-</span>'}</td>
                 <td>${l.asset_class || '<span class="empty-cell">-</span>'}</td>
+                <td>${l.country || '<span class="empty-cell">-</span>'}</td>
+                <td>${l.fundraising_status || '<span class="empty-cell">-</span>'}</td>
                 <td>${l.contact_count ? `<a onclick="showLead(${l.id})">${l.contact_count}</a>` : '<span class="empty-cell">-</span>'}</td>
             </tr>`).join("")}
             </tbody>
@@ -400,14 +416,20 @@ function renderLeadDetail(id) {
         <h1>${esc(lead.company_name)}</h1>
         <div class="detail-card">
             ${lead.aum ? `<p><strong>AUM:</strong> ${fmtM(lead.aum)}</p>` : ""}
+            ${lead.dry_powder ? `<p><strong>Dry Powder:</strong> ${fmtM(lead.dry_powder)}</p>` : ""}
             ${lead.total_gav ? `<p><strong>Total Fund GAV:</strong> ${fmtM(lead.total_gav)}</p>` : ""}
             ${lead.fund_count ? `<p><strong>Funds:</strong> ${lead.fund_count}</p>` : ""}
+            ${lead.funds_open ? `<p><strong>Open Funds:</strong> ${lead.funds_open}</p>` : ""}
             ${lead.fund_types ? `<p><strong>Fund Types:</strong> ${esc(lead.fund_types)}</p>` : ""}
+            ${lead.last_fund_strategy ? `<p><strong>Last Fund Strategy:</strong> ${esc(lead.last_fund_strategy)}</p>` : ""}
             ${lead.asset_class ? `<p><strong>Asset Class:</strong> ${esc(lead.asset_class)}</p>` : ""}
             ${lead.platform ? `<p><strong>Tech Platform:</strong> ${esc(lead.platform)}</p>` : ""}
             ${lead.admin ? `<p><strong>Fund Admin:</strong> ${esc(lead.admin)}</p>` : ""}
+            ${lead.hq_location ? `<p><strong>HQ:</strong> ${esc(lead.hq_location)}</p>` : (lead.country ? `<p><strong>Country:</strong> ${esc(lead.country)}</p>` : "")}
+            ${lead.fundraising_status ? `<p><strong>Fundraising:</strong> ${esc(lead.fundraising_status)}</p>` : ""}
             ${lead.domain ? `<p><strong>Domain:</strong> <a href="${lead.domain.startsWith("http") ? lead.domain : "https://" + lead.domain}" target="_blank">${esc(lead.domain)}</a></p>` : ""}
             <p><strong>Source:</strong> ${esc(lead.source)}</p>
+            ${lead.description ? `<p><strong>Description:</strong> ${esc(lead.description)}</p>` : ""}
         </div>
         <h2>Contacts <span class="count">(${cs.length})</span></h2>
         ${cs.length ? `<table>
@@ -444,7 +466,7 @@ function sortLeads(col) {
 }
 
 function clearLeadFilters() {
-    leadFilters = { platform: "", admin: "", source: "", asset_class: "", q: "" };
+    leadFilters = { platform: "", admin: "", source: "", asset_class: "", country: "", fundraising_status: "", q: "" };
     leadsPage = 1;
     render();
 }
