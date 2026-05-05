@@ -1,7 +1,10 @@
 {
-  "total_leads": 17891,
-  "total_contacts": 51057,
-  "contacts_with_email": 37771,
-  "leads_matched": 9856,
+  "total_leads": 24287,
+  "total_sponsors": 17891,
+  "total_portal_targets": 6317,
+  "total_funded_targets": 79,
+  "total_contacts": 59864,
+  "contacts_with_email": 46578,
+  "leads_matched": 16266,
   "uk_pe_enriched": 2681
 }

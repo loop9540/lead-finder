@@ -24,9 +24,9 @@ let contactsPage = 1;
 let lawyersPage = 1;
 const PER_PAGE = 50;
 let leadSort = { col: "company_name", dir: "asc" };
-let leadFilters = { platform: "", admin: "", source: "", asset_class: "", country: "", fundraising_status: "", q: "" };
+let leadFilters = { platform: "", admin: "", source: "", asset_class: "", country: "", fundraising_status: "", target_product: "Sponsor", q: "" };
 let contactSearch = "";
-let contactFilters = { platform: "", admin: "", asset_class: "" };
+let contactFilters = { platform: "", admin: "", asset_class: "", target_product: "Sponsor" };
 let lawyerFilters = { firm: "", country: "", practice: "", q: "" };
 
 // --- Data Loading ---
@@ -71,6 +71,9 @@ function getUnique(arr, key) {
 
 function filteredLeads() {
     let f = leads;
+    if (leadFilters.target_product === "Sponsor") f = f.filter(r => !r.target_product);
+    else if (leadFilters.target_product === "Portal") f = f.filter(r => r.target_product === "Portal");
+    else if (leadFilters.target_product === "Funded") f = f.filter(r => r.target_product === "Funded");
     if (leadFilters.platform) f = f.filter(r => r.platform === leadFilters.platform);
     if (leadFilters.admin) f = f.filter(r => r.admin === leadFilters.admin);
     if (leadFilters.asset_class) f = f.filter(r => r.asset_class === leadFilters.asset_class);
@@ -105,6 +108,10 @@ function filteredContacts() {
         if (contactFilters.admin && lead.admin !== contactFilters.admin) continue;
         if (contactFilters.asset_class && lead.asset_class !== contactFilters.asset_class) continue;
         for (const c of cs) {
+            const cp = c.target_product || "";
+            if (contactFilters.target_product === "Sponsor" && cp) continue;
+            else if (contactFilters.target_product === "Portal" && cp !== "Portal") continue;
+            else if (contactFilters.target_product === "Funded" && cp !== "Funded") continue;
             arr.push({ ...c, lead_id: lid, lead_company: lead.company_name, platform: lead.platform, admin: lead.admin, asset_class: lead.asset_class });
         }
     }
@@ -287,6 +294,12 @@ function renderLeads() {
     document.getElementById("app").innerHTML = `
         <h1>Leads <span class="count">(${fmt(total)})</span></h1>
         <div class="filters">
+            <select onchange="leadFilters.target_product=this.value;leadsPage=1;render()">
+                <option value="Sponsor" ${leadFilters.target_product === "Sponsor" ? "selected" : ""}>Sponsors</option>
+                <option value="Portal" ${leadFilters.target_product === "Portal" ? "selected" : ""}>Portal Targets</option>
+                <option value="Funded" ${leadFilters.target_product === "Funded" ? "selected" : ""}>Funded Targets</option>
+                <option value="ALL" ${leadFilters.target_product === "ALL" ? "selected" : ""}>All</option>
+            </select>
             <select onchange="leadFilters.platform=this.value;leadsPage=1;render()">
                 <option value="">All Tech Platforms</option>
                 ${platforms.map(p => `<option value="${esc(p)}" ${p === leadFilters.platform ? "selected" : ""}>${esc(p)}</option>`).join("")}
@@ -365,6 +378,12 @@ function renderContacts() {
     document.getElementById("app").innerHTML = `
         <h1>Contacts <span class="count">(${fmt(total)})</span></h1>
         <div class="filters">
+            <select onchange="contactFilters.target_product=this.value;contactsPage=1;render()">
+                <option value="Sponsor" ${contactFilters.target_product === "Sponsor" ? "selected" : ""}>Sponsors</option>
+                <option value="Portal" ${contactFilters.target_product === "Portal" ? "selected" : ""}>Portal Targets</option>
+                <option value="Funded" ${contactFilters.target_product === "Funded" ? "selected" : ""}>Funded Targets</option>
+                <option value="ALL" ${contactFilters.target_product === "ALL" ? "selected" : ""}>All</option>
+            </select>
             <select onchange="contactFilters.platform=this.value;contactsPage=1;render()">
                 <option value="">All Tech Platforms</option>
                 ${getUnique(leads, "platform").map(p => `<option value="${esc(p)}" ${p === contactFilters.platform ? "selected" : ""}>${esc(p)}</option>`).join("")}
@@ -466,7 +485,7 @@ function sortLeads(col) {
 }
 
 function clearLeadFilters() {
-    leadFilters = { platform: "", admin: "", source: "", asset_class: "", country: "", fundraising_status: "", q: "" };
+    leadFilters = { platform: "", admin: "", source: "", asset_class: "", country: "", fundraising_status: "", target_product: "Sponsor", q: "" };
     leadsPage = 1;
     render();
 }
@@ -498,7 +517,7 @@ function clearContactSearch() {
 
 function clearContactFilters() {
     contactSearch = "";
-    contactFilters = { platform: "", admin: "", asset_class: "" };
+    contactFilters = { platform: "", admin: "", asset_class: "", target_product: "Sponsor" };
     contactsPage = 1;
     render();
 }
