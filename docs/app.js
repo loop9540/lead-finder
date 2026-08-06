@@ -26,7 +26,9 @@ const PER_PAGE = 50;
 let leadSort = { col: "company_name", dir: "asc" };
 let leadFilters = { platform: "", admin: "", source: "", asset_class: "", country: "", fundraising_status: "", target_product: "Sponsor", q: "" };
 let contactSearch = "";
-let contactFilters = { platform: "", admin: "", asset_class: "", target_product: "Sponsor" };
+let contactFilters = { platform: "", admin: "", asset_class: "", country: "", target_product: "Sponsor" };
+// lead lookup by id — rebuilt when leads load, so filtering does not rescan the array
+let leadById = new Map();
 let lawyerFilters = { firm: "", country: "", practice: "", q: "" };
 
 // --- Data Loading ---
@@ -40,6 +42,7 @@ async function loadData() {
             fetch("data/stats.json").then(r => r.json()),
         ]);
         leads = l;
+        leadById = new Map(leads.map(x => [String(x.id), x]));
         stats = s;
         render();
 
@@ -102,17 +105,18 @@ function filteredContacts() {
     // Flatten contacts into array with lead info
     const arr = [];
     for (const [lid, cs] of Object.entries(contacts)) {
-        const lead = leads.find(l => l.id == lid);
+        const lead = leadById.get(lid);
         if (!lead) continue;
         if (contactFilters.platform && lead.platform !== contactFilters.platform) continue;
         if (contactFilters.admin && lead.admin !== contactFilters.admin) continue;
         if (contactFilters.asset_class && lead.asset_class !== contactFilters.asset_class) continue;
+        if (contactFilters.country && lead.country !== contactFilters.country) continue;
         for (const c of cs) {
             const cp = c.target_product || "";
             if (contactFilters.target_product === "Sponsor" && cp) continue;
             else if (contactFilters.target_product === "Portal" && cp !== "Portal") continue;
             else if (contactFilters.target_product === "Funded" && cp !== "Funded") continue;
-            arr.push({ ...c, lead_id: lid, lead_company: lead.company_name, platform: lead.platform, admin: lead.admin, asset_class: lead.asset_class });
+            arr.push({ ...c, lead_id: lid, lead_company: lead.company_name, platform: lead.platform, admin: lead.admin, asset_class: lead.asset_class, country: lead.country });
         }
     }
     if (contactSearch) {
@@ -398,16 +402,20 @@ function renderContacts() {
                 <option value="">All Asset Classes</option>
                 ${getUnique(leads, "asset_class").map(a => `<option value="${esc(a)}" ${a === contactFilters.asset_class ? "selected" : ""}>${esc(a)}</option>`).join("")}
             </select>
+            <select onchange="contactFilters.country=this.value;contactsPage=1;render()">
+                <option value="">All Countries</option>
+                ${getUnique(leads, "country").map(c => `<option value="${esc(c)}" ${c === contactFilters.country ? "selected" : ""}>${esc(c)}</option>`).join("")}
+            </select>
             <input type="text" placeholder="Search name, email, or sponsor..." value="${esc(contactSearch)}"
                    oninput="contactSearch=this.value;contactsPage=1;render()">
-            ${(contactSearch || contactFilters.platform || contactFilters.admin || contactFilters.asset_class) ? '<a class="btn btn-secondary" onclick="clearContactFilters()">Clear</a>' : ""}
+            ${(contactSearch || contactFilters.platform || contactFilters.admin || contactFilters.asset_class || contactFilters.country) ? '<a class="btn btn-secondary" onclick="clearContactFilters()">Clear</a>' : ""}
         </div>
         <div class="table-actions">
             <button onclick="exportContactsCSV()">Download Contacts CSV</button>
         </div>
         <table>
             <thead><tr>
-                <th>Name</th><th>Title</th><th>Company</th><th>Platform</th><th>Email</th>
+                <th>Name</th><th>Title</th><th>Company</th><th>Platform</th><th>Country</th><th>Email</th>
             </tr></thead>
             <tbody>
             ${page.map(c => `<tr>
@@ -415,6 +423,7 @@ function renderContacts() {
                 <td>${esc(c.title || "")}</td>
                 <td><a onclick="showLead(${c.lead_id})">${esc(c.lead_company || "")}</a></td>
                 <td>${esc(c.platform || c.admin || "")}</td>
+                <td>${c.country ? esc(c.country) : '<span class="empty-cell">-</span>'}</td>
                 <td>${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ""}</td>
             </tr>`).join("")}
             </tbody>
@@ -494,10 +503,10 @@ function clearLeadFilters() {
 
 function exportContactsCSV() {
     const f = filteredContacts();
-    const headers = ["First Name", "Last Name", "Title", "Sponsor", "Platform", "Email", "Phone"];
+    const headers = ["First Name", "Last Name", "Title", "Sponsor", "Platform", "Country", "Email", "Phone"];
     const rows = f.map(c => [
         c.first_name || "", c.last_name || "", c.title || "",
-        c.lead_company || "", c.platform || c.admin || "",
+        c.lead_company || "", c.platform || c.admin || "", c.country || "",
         c.email || "", c.phone || ""
     ]);
     let csv = headers.join(",") + "\n";
@@ -519,7 +528,7 @@ function clearContactSearch() {
 
 function clearContactFilters() {
     contactSearch = "";
-    contactFilters = { platform: "", admin: "", asset_class: "", target_product: "Sponsor" };
+    contactFilters = { platform: "", admin: "", asset_class: "", country: "", target_product: "Sponsor" };
     contactsPage = 1;
     render();
 }
