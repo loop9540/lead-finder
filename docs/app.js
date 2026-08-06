@@ -146,6 +146,8 @@ function filteredLawyers() {
             (r.name || "").toLowerCase().includes(q) ||
             (r.firm || "").toLowerCase().includes(q) ||
             (r.bio || "").toLowerCase().includes(q) ||
+            (r.practice || "").toLowerCase().includes(q) ||
+            (r.title || "").toLowerCase().includes(q) ||
             (r.office || "").toLowerCase().includes(q)
         );
     }

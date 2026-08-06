@@ -27,8 +27,8 @@ table { width: 100%; border-collapse: collapse; background: #fff; border-radius:
 th, td { padding: 0.55rem 0.75rem; text-align: left; font-size: 0.85rem; }
 th { background: #f7fafc; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: #4a5568; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; cursor: pointer; }
 th:hover { background: #edf2f7; }
-th.sorted-asc::after { content: " \u25B2"; }
-th.sorted-desc::after { content: " \u25BC"; }
+th.sorted-asc::after { content: " \25B2"; }
+th.sorted-desc::after { content: " \25BC"; }
 td { border-bottom: 1px solid #edf2f7; }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: #f7fafc; }
